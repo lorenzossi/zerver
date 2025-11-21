@@ -9,5 +9,6 @@ pub fn main() !void {
     const ip_addr = try net.IpAddress.parse("172.0.0.1", 3843);
     print("Port: {d}\n", .{ip_addr.ip4.port});
 
+    const server = try ip_addr.listen(io: Io, .{});
     // const socket = ip_addr.bind(, options: BindOptions)
 }
