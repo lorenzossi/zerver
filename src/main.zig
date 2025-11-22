@@ -3,12 +3,28 @@ const net = std.Io.net;
 const print = std.debug.print;
 
 pub fn main() !void {
-    // Prints to stderr, ignoring potential errors.
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+    const ip_addr = try net.IpAddress.parse("127.0.0.1", 8000);
 
-    const ip_addr = try net.IpAddress.parse("172.0.0.1", 3843);
-    print("Port: {d}\n", .{ip_addr.ip4.port});
+    var gpa = std.heap.DebugAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
 
-    const server = try ip_addr.listen(io: Io, .{});
-    // const socket = ip_addr.bind(, options: BindOptions)
+    var threaded: std.Io.Threaded = std.Io.Threaded.init(allocator);
+    defer threaded.deinit();
+    const io = threaded.io();
+
+    var listener = try ip_addr.listen(io, .{ .reuse_address = true });
+    defer listener.deinit(io);
+
+    const connection = try listener.accept(io);
+    defer connection.close(io);
+
+    var buffer: [1024]u8 = undefined;
+
+    var reader = connection.reader(io, &buffer);
+    const readed_bytes = try reader.interface.peekArray(10);
+
+    // print("{any}\n", .{@TypeOf(readed_bytes)});
+
+    print("letto: {s}\n", .{readed_bytes[0..readed_bytes.len]});
 }
