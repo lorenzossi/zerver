@@ -20,7 +20,9 @@ pub fn main() !void {
     defer threaded.deinit();
     const io = threaded.io();
 
-    var listener = try address.listen(io, .{});
+    var listener = try address.listen(io, .{
+        .reuse_address = true,
+    });
 
     while (listener.accept(io)) |conn| {
         defer conn.close(io);
@@ -29,8 +31,19 @@ pub fn main() !void {
         @memset(request_buffer[0..], 0);
         try Request.read_request(io, conn, request_buffer[0..]);
 
-        std.debug.print("{s}\n", .{request_buffer});
+        // std.debug.print("{s}\n", .{request_buffer});
+        printEscaped(&request_buffer);
     } else |err| {
         log.err("Error while accepting connection: {any}", .{err});
+    }
+}
+
+pub fn printEscaped(input: []const u8) void {
+    for (input) |c| {
+        switch (c) {
+            '\n' => std.debug.print("\\n", .{}),
+            '\r' => std.debug.print("\\r", .{}),
+            else => std.debug.print("{c}", .{c}),
+        }
     }
 }
