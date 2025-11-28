@@ -20,18 +20,19 @@ pub fn main() !void {
     defer threaded.deinit();
     const io = threaded.io();
 
-    var listener = try address.listen(io, .{
-        .reuse_address = true,
-    });
+    var listener = try address.listen(io, .{ .reuse_address = true });
+    defer listener.deinit(io);
 
     while (listener.accept(io)) |conn| {
         defer conn.close(io);
+        // log.info("Connection established with: {f}\n", .{conn.socket.address});
 
         var request_buffer: [8192]u8 = undefined;
-        @memset(request_buffer[0..], 0);
-        try Request.read_request(io, conn, request_buffer[0..]);
+        var request_len: usize = 0;
+        try Request.read_request(io, conn, request_buffer[0..], &request_len);
 
-        std.debug.print("{s}\n", .{request_buffer});
+        const request_data = request_buffer[0..request_len];
+        std.debug.print("{s}\n", .{request_data});
     } else |err| {
         log.err("Error while accepting connection: {any}", .{err});
     }
