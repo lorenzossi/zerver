@@ -5,6 +5,7 @@ const log = std.log;
 
 const Server = @import("server.zig").Server;
 const Request = @import("request.zig");
+const Parser = @import("parser.zig").Parser;
 
 pub fn main() !void {
     log.info("Starting server...", .{});
@@ -31,8 +32,8 @@ pub fn main() !void {
         var request_len: usize = 0;
         try Request.read_request(io, conn, request_buffer[0..], &request_len);
 
-        const request_data = request_buffer[0..request_len];
-        std.debug.print("{s}\n", .{request_data});
+        const parser: Parser = .{};
+        _ = parser.parse(&request_buffer);
     } else |err| {
         log.err("Error while accepting connection: {any}", .{err});
     }
