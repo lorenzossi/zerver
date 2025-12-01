@@ -32,8 +32,7 @@ pub fn main() !void {
         var request_len: usize = 0;
         try Request.read_request(io, conn, request_buffer[0..], &request_len);
 
-        const parser: Parser = .{};
-        _ = parser.parse(&request_buffer);
+        try Parser.parse(&request_buffer);
     } else |err| {
         log.err("Error while accepting connection: {any}", .{err});
     }
